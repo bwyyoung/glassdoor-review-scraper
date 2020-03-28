@@ -19,21 +19,21 @@ Ratings for each of 5 categories
 Overall rating
 '''
 
-import time
-import pandas as pd
-from argparse import ArgumentParser
-import argparse
-import logging
-import logging.config
-from selenium import webdriver as wd
-import selenium
-import numpy as np
-from schema import SCHEMA
-from selenium.common.exceptions import StaleElementReferenceException
-from selenium.common.exceptions import NoSuchElementException
-import json
-import urllib
 import datetime as dt
+import json
+import logging.config
+import time
+import urllib
+from argparse import ArgumentParser
+
+import numpy as np
+import pandas as pd
+import selenium
+from selenium import webdriver as wd
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
+
+from schema import SCHEMA
 
 start = time.time()
 
@@ -96,7 +96,6 @@ else:
         --password flags.'
         raise Exception(msg)
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
@@ -112,7 +111,6 @@ logging.getLogger('selenium').setLevel(logging.CRITICAL)
 
 
 def scrape(field, review, author):
-
     def scrape_date(review):
         return review.find_element_by_tag_name(
             'time').get_attribute('datetime')
@@ -162,7 +160,7 @@ def scrape(field, review, author):
         try:
             x = review.find_element_by_class_name(
                 'helpfulReviews').text.strip('""')
-            res = x[x.find("(")+1:x.find(")")]
+            res = x[x.find("(") + 1:x.find(")")]
         except Exception:
             res = 0
         return res
@@ -170,7 +168,8 @@ def scrape(field, review, author):
     def scrape_pros(review):
         try:
             res = review.find_elements_by_class_name(
-                'v2__EIReviewDetailsV2__fullWidth')[0].find_elements_by_tag_name('p')[1].text
+                'v2__EIReviewDetailsV2__fullWidth')[
+                0].find_elements_by_tag_name('p')[1].text
         except Exception:
             res = np.nan
         return res
@@ -178,7 +177,8 @@ def scrape(field, review, author):
     def scrape_cons(review):
         try:
             res = review.find_elements_by_class_name(
-                'v2__EIReviewDetailsV2__fullWidth')[1].find_elements_by_tag_name('p')[1].text
+                'v2__EIReviewDetailsV2__fullWidth')[
+                1].find_elements_by_tag_name('p')[1].text
         except Exception:
             res = np.nan
         return res
@@ -186,7 +186,8 @@ def scrape(field, review, author):
     def scrape_advice(review):
         try:
             res = review.find_elements_by_class_name(
-                'v2__EIReviewDetailsV2__fullWidth')[2].find_elements_by_tag_name('p')[1].text
+                'v2__EIReviewDetailsV2__fullWidth')[
+                2].find_elements_by_tag_name('p')[1].text
         except Exception:
             res = np.nan
         return res
@@ -253,7 +254,6 @@ def scrape(field, review, author):
 
 
 def extract_from_page():
-
     def is_featured(review):
         try:
             review.find_element_by_class_name('featuredFlag')
@@ -273,24 +273,23 @@ def extract_from_page():
 
     logger.info(f'Extracting reviews from page {page[0]}')
 
-
     res = pd.DataFrame([], columns=SCHEMA)
 
     reviews = browser.find_elements_by_class_name('empReview')
 
-    if(len(reviews)== 0):
+    if (len(reviews) == 0):
         logger.info('No more Review!')
         date_limit_reached[0] = True
 
     logger.info(f'Found {len(reviews)} reviews on page {page[0]}')
-    like = browser.find_elements_by_class_name('v2__EIReviewDetailsV2__continueReading')
-    for x in range(0,len(like)):
+    continuereading = browser.find_elements_by_class_name(
+        'v2__EIReviewDetailsV2__continueReading')
+    for x in range(0, len(continuereading)):
         try:
-            if like[x].is_displayed():
-                like[x].click()
+            if continuereading[x].is_displayed():
+                continuereading[x].click()
         except StaleElementReferenceException as Exception:
-            print('StaleElementReferenceException on like ' + str(x))
-        
+            print('StaleElementReferenceException on continuereading ' + str(x))
 
     for review in reviews:
         if not is_featured(review):
@@ -303,7 +302,7 @@ def extract_from_page():
         idx[0] = idx[0] + 1
 
     if args.max_date and \
-        (pd.to_datetime(res['date']).max() > args.max_date) or \
+            (pd.to_datetime(res['date']).max() > args.max_date) or \
             args.min_date and \
             (pd.to_datetime(res['date']).min() < args.min_date):
         logger.info('Date limit reached, ending process')
@@ -313,8 +312,9 @@ def extract_from_page():
 
 
 def more_pages():
-    next_ = browser.find_element_by_class_name('pagination__PaginationStyle__next')
-    try:        
+    next_ = browser.find_element_by_class_name(
+        'pagination__PaginationStyle__next')
+    try:
         next_.find_element_by_tag_name('a')
         return True
     except selenium.common.exceptions.NoSuchElementException:
@@ -385,13 +385,14 @@ def get_browser():
 
 def get_current_page():
     logger.info('Getting current page number')
-    paging_control = browser.find_element_by_class_name('pagination__PaginationStyle__page.pagination__PaginationStyle__current')
+    paging_control = browser.find_element_by_class_name(
+        'pagination__PaginationStyle__page.pagination__PaginationStyle__current')
     current = int(paging_control.find_element_by_xpath(
         '//ul//li[contains\
         (concat(\' \',normalize-space(@class),\' \'),\' current \')]\
         //span[contains(concat(\' \',\
         normalize-space(@class),\' \'),\' disabled \')]')
-        .text.replace(',', ''))
+                  .text.replace(',', ''))
     return current
 
 
@@ -415,7 +416,6 @@ date_limit_reached = [False]
 
 
 def main():
-
     logger.info(f'Scraping up to {args.limit} reviews.')
 
     res = pd.DataFrame([], columns=SCHEMA)
@@ -443,8 +443,8 @@ def main():
 
     # import pdb;pdb.set_trace()
 
-    while more_pages() and\
-            len(res) < args.limit and\
+    while more_pages() and \
+            len(res) < args.limit and \
             not date_limit_reached[0]:
         go_to_next_page()
         reviews_df = extract_from_page()

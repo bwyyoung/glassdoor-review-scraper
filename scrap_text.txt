@@ -1,0 +1,5 @@
+ddd mmm dd yyyy hh:mm:ss
+
+v2__EIReviewDetailsV2__continueReading v2__EIReviewDetailsV2__clickable
+
+python3 main.py -u https://www.glassdoor.sg/Reviews/Singtel-Reviews-E3971.htm -f singtel2.csv -l 9999 --headless
